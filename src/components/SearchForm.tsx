@@ -9,6 +9,7 @@ import Autocomplete from "@mui/material/Autocomplete";
 import { showErrorToast } from "@/utils/toastUtils";
 import { airportEndpoint } from "@/services/axios/endpoints/airport.endpoint";
 import { apiRequest } from "@/utils/apiRequest";
+import { countryData } from "@/data";
 
 const schema = z.object({
   country: z.string().nonempty("Country is required"),
@@ -46,42 +47,69 @@ const SearchForm = () => {
     }[]
   >([]);
 
-  useEffect(() => {
-    const getAllCountry = async () => {
-      const url = `${process.env.NEXT_PUBLIC_SERVER}${airportEndpoint["get-all-country"]}`;
+  // useEffect(() => {
+  //   const getAllCountry = async () => {
+  //     const url = `${process.env.NEXT_PUBLIC_SERVER}${airportEndpoint["get-all-country"]}`;
 
-      const { result, error } = await apiRequest<
-        { name: string; code: string }[]
-      >(url, "GET");
-      if (error) showErrorToast(error);
-      if (result) setCountryOptions(result);
-    };
-    getAllCountry();
+  //     const { result, error } = await apiRequest<
+  //       { name: string; code: string }[]
+  //     >(url, "GET");
+  //     if (error) showErrorToast(error);
+  //     if (result) setCountryOptions(result);
+  //   };
+  //   getAllCountry();
+  // }, []);
+
+  useEffect(() => {
+    setCountryOptions(countryData);
   }, []);
 
   useEffect(() => {
-    const get_all_city_by_code = async () => {
-      const url = `${process.env.NEXT_PUBLIC_SERVER}${airportEndpoint[
-        "get-all-city-by-country-code"
-      ](countryCode)}`;
-
-      const { result, error } = await apiRequest<string[]>(url, "GET");
-      if (error) showErrorToast(error);
-      if (result) setCityOptions(result);
+  const get_all_city_by_code = async () => {
+    const url = `${process.env.NEXT_PUBLIC_SERVER}${airportEndpoint["post-search-airport"]}`;
+    const payload = {
+      filters: [
+        { key: "countryCode", operator: "equal", value: countryCode }
+      ],
+      sorts: [
+        { key: "id", type: "DESC" }
+      ],
+      rpp: 100,
+      page: 1
     };
-    const get_all_arival_city_by_code = async () => {
-      const url = `${process.env.NEXT_PUBLIC_SERVER}${airportEndpoint[
-        "get-all-city-by-country-code"
-      ](countryArrivalCode)}`;
+    const { result, error } = await apiRequest<any>(url, "POST", undefined, payload);
+    if (error) showErrorToast(error);
+    if (result && result.data.items) {
+      const cities: string[] = Array.from(new Set(result.data.items.map((airport: any) => airport.cityName)));
+      console.log(cities);
+      setCityOptions(cities);
+    }
+  };
 
-      const { result, error } = await apiRequest<string[]>(url, "GET");
-      if (error) showErrorToast(error);
-      if (result) setCityArrivalOptions(result);
+  const get_all_arival_city_by_code = async () => {
+    const url = `${process.env.NEXT_PUBLIC_SERVER}${airportEndpoint["post-search-airport"]}`;
+    const payload = {
+      filters: [
+        { key: "countryCode", operator: "equal", value: countryArrivalCode }
+      ],
+      sorts: [
+        { key: "id", type: "DESC" }
+      ],
+      rpp: 100,
+      page: 1
     };
+    const { result, error } = await apiRequest<any>(url, "POST", undefined, payload);
+    if (error) showErrorToast(error);
+    if (result && result.data.items) {
+      const cities: string[] = Array.from(new Set(result.data.items.map((airport: any) => airport.cityName)));
+      console.log(cities);
+      setCityArrivalOptions(cities);
+    }
+  };
 
-    get_all_arival_city_by_code();
-    get_all_city_by_code();
-  }, [countryCode, countryArrivalCode]);
+  get_all_arival_city_by_code();
+  get_all_city_by_code();
+}, [countryCode, countryArrivalCode]);
 
   const onSubmit: SubmitHandler<FormFields> = async (data) => {
     const queryParams = `?departure=${encodeURIComponent(
