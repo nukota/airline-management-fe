@@ -60,7 +60,7 @@ export const options: NextAuthOptions = {
         console.log(typeof isStaff);
         if (isStaff === "false") {
           try {
-            const url = `${process.env.NEXT_PUBLIC_SERVER}/customer/login`;
+            const url = `${process.env.NEXT_PUBLIC_SERVER}/user-service/customer/login`;
             const config = {
               method: "post",
               maxBodyLength: Infinity,
@@ -90,7 +90,7 @@ export const options: NextAuthOptions = {
           }
         } else if (isStaff === "true") {
           try {
-            const url = `${process.env.NEXT_PUBLIC_SERVER}/staff/login`;
+            const url = `${process.env.NEXT_PUBLIC_SERVER}/user-service/employee/login`;
             const config = {
               method: "post",
               maxBodyLength: Infinity,
