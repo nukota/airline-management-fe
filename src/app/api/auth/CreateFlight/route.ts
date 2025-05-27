@@ -19,7 +19,7 @@ export async function POST(request: Request) {
       maxBodyLength: Infinity,
       url: `${process.env.NEXT_PUBLIC_SERVER}/flight`,
       headers: {
-        Authorization: session?.user.token,
+        Authorization: `Bearer ${session?.user.token}`,
         "Content-Type": "application/x-www-form-urlencoded",
       },
       data: qs.stringify(body),

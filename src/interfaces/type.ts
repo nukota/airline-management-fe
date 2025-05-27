@@ -13,6 +13,7 @@ export type Customer = {
   createAt: string;
   updateAt: string;
 };
+
 export type Staff = {
   staffId: string;
   username: string;
@@ -47,6 +48,7 @@ export type BookingType = {
   class: string;
   brand: string;
 };
+
 export type TicketType = {
   ticketId: string;
   flightId: string;
@@ -62,6 +64,7 @@ export type TicketType = {
   updateAt: string;
   seatFlight: SeatFlightType;
 };
+
 export type SeatFlightType = {
   seatId: string;
   flightId: string;
@@ -71,6 +74,7 @@ export type SeatFlightType = {
   isEmpty: boolean;
   ticketClass: TicketClassType;
 };
+
 export type TicketClassType = {
   className: string;
   priceBonusInterest: string;
@@ -78,6 +82,7 @@ export type TicketClassType = {
   isDefaultClass: boolean;
   createdAt: string;
 };
+
 export type IntermediateAirport = {
   flightId: string;
   airportId: string;
@@ -119,25 +124,53 @@ export type chart = {
   labels: string[];
 };
 
+export type AirlineType = {
+  code: string;
+  name: string;
+  logo: string;
+};
+
 export type FlightType = {
-  flightId: string;
-  logo?: string;
-  departureAirportId: number;
-  arrivalAirportId: number;
-  departureTime: string;
-  flightDuration: string;
-  price: string;
-  status: string;
-  airlines: string;
+  id: number;
+  flightCode: string;
+  departureDate: string;
+  arrivalDate: string;
+  totalDuration: number;
+  stopCount: number;
   description: string;
-  createAt: string;
-  updateAt: string;
-  deletedAt: string;
-  departureAirport: AirportType;
-  arrivalAirport: AirportType;
-  intermediateAirports: IntermediateAirport[];
-  seatsAvailable: number;
-  seatsTotal: number;
+  basePrice: number;
+  airline: AirlineType;
+  departureAirport: {
+    id: number;
+    code: string;
+    airportName: string;
+    countryName: string;
+    countryCode: string;
+    cityName: string;
+    region: string;
+    regionCode: string;
+    image: string | null;
+  };
+  arrivalAirport: {
+    id: number;
+    code: string;
+    airportName: string;
+    countryName: string;
+    countryCode: string;
+    cityName: string;
+    region: string;
+    regionCode: string;
+    image: string | null;
+  };
+  airplane: {
+    id: number;
+    name: string;
+    totalColSeat: number;
+    totalRowSeat: number;
+    description: string;
+    image: string;
+  };
+  createAt: string | null;
 };
 
 export type Rules = {
@@ -159,4 +192,25 @@ export type DataFetchType<T> = {
   page: number;
   pageTotal: number;
   perPage: number;
+};
+
+export type OrderType = {
+  orderId: string;
+  flightBookings: {
+    flightId: number;
+    status: string;
+    contactName: string;
+    contactPhone: string;
+    totalPrice: number;
+    flightLuggageId: number | null;
+    tickets: {
+      passengerName: string;
+      passengerBirthdate: string;
+      passengerGender: "MALE" | "FEMALE";
+      passengerIdCard: string;
+      seatNumber: string;
+      status: string;
+      price: number;
+    }[];
+  }[];
 };

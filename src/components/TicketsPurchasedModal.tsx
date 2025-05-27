@@ -3,9 +3,19 @@
 import React, { useState } from "react";
 import TicketCard from "./TIcketCard";
 import { useSession } from "next-auth/react";
-import { BookingType } from "@/interfaces/type";
 
-const TicketsPurchasedModal: React.FC<{ allBookings: BookingType[] }> = ({
+// Define the ticket type based on your new OrderType structure
+type TicketDisplayType = {
+  bookingId: string;
+  flightId: number;
+  bookedAt?: string;
+  paymentStatus: string;
+  seatId: string;
+  seatClass: string;
+  price: number;
+};
+
+const TicketsPurchasedModal: React.FC<{ allBookings: TicketDisplayType[] }> = ({
   allBookings,
 }) => {
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -18,7 +28,7 @@ const TicketsPurchasedModal: React.FC<{ allBookings: BookingType[] }> = ({
           onClick={() => setShowModal(true)}
           className="btn w-full bg-blue-600 text-white px-4 py-2 rounded-lg btn-ghost transition duration-300"
         >
-          See all booking recently
+          See all orders
         </button>
 
         {showModal && (
@@ -26,7 +36,7 @@ const TicketsPurchasedModal: React.FC<{ allBookings: BookingType[] }> = ({
             <div className="bg-white rounded-lg p-6 ">
               <div className="flex justify-between items-center border-b-2 border-gray-200 pb-4 mb-5">
                 <h2 className="text-2xl font-semibold">
-                  My purchased ticket list
+                  My Orders
                 </h2>
                 <button
                   onClick={() => setShowModal(false)}
@@ -58,7 +68,7 @@ const TicketsPurchasedModal: React.FC<{ allBookings: BookingType[] }> = ({
                       bookedAt={book.bookedAt}
                       paymentStatus={book.paymentStatus}
                       seatId={book.seatId}
-                      seatClass={book.class}
+                      seatClass={book.seatClass}
                       price={book.price}
                     />
                   </div>

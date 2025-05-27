@@ -7,7 +7,7 @@ import TicketCard from "@/components/TIcketCard";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import TicketsPurchasedModal from "@/components/TicketsPurchasedModal";
-import { BookingType, chart } from "@/interfaces/type";
+import { BookingType, chart, OrderType } from "@/interfaces/type";
 import LineChart from "@/components/LineChart";
 import { customerEndpoint } from "@/services/axios/endpoints/customer.endpoint";
 import { sortByDateDesc } from "@/utils/dataDateSort";
@@ -28,46 +28,58 @@ function ProfilePage() {
     return () => clearInterval(interval);
   }, [session, router]);
 
-  const [bookings, setBookings] = useState<BookingType[]>([]);
+  const [orders, setOrders] = useState<OrderType[]>([]);
   const [totalMoneySpent, setTotalMoneySpent] = useState<number>(0);
 
   useEffect(() => {
-    const getBookingTicket = async () => {
-      const url = `${process.env.NEXT_PUBLIC_SERVER}${bookingEndpoint["get-my-booking-history"]}`;
-
-      const { result, error } = await apiRequest<BookingType[]>(
+    const getOrders = async () => {
+      const url = `${process.env.NEXT_PUBLIC_SERVER}${bookingEndpoint["get-my-orders"]}`;
+      const { result, error } = await apiRequest<any>(
         url,
         "GET",
         session?.user.token
       );
-
-      const mappedData = result?.map((dt: any) => ({
-        bookingId: dt.bookingId,
-        paymentStatus: dt.paymentStatus,
-        bookingStatus: dt.bookingStatus,
-        passengerId: dt.passengerId,
-        price: dt.price,
-        bookedAt: dt.bookedAt,
-        updateAt: dt.updateAt,
-        seatId: dt.seatFlight.seatId,
-        flightId: dt.seatFlight.flightId,
-        class: dt.seatFlight.class,
-        brand: dt.seatFlight.flight.airlines,
-      }));
-
-      setBookings(sortByDateDesc(mappedData, "bookedAt"));
+      console.log("result", result);
+      if (Array.isArray(result.data)) setOrders(result.data);
+      else setOrders([]);
     };
-    getBookingTicket();
-  }, [session?.user.token, setBookings]);
+    getOrders();
+  }, [session?.user.token]);
 
   useEffect(() => {
-    const total = bookings.reduce((acc, book) => acc + Number(book.price), 0);
+    // Sum all ticket prices in all orders
+    let total = 0;
+    orders.forEach((order) => {
+      order.flightBookings.forEach((fb) => {
+        total += Number(fb.totalPrice || 0);
+      });
+    });
     setTotalMoneySpent(total);
-  }, [bookings]);
+  }, [orders]);
 
-  const [flightInMonth, setFlightInMonth] = useState<number[]>(
-    Array(12).fill(0)
+  // For chart data, flatten all tickets and include required TicketDisplayType fields
+  const allTickets = orders.flatMap((order) =>
+    order.flightBookings.flatMap((fb) =>
+      fb.tickets.map((ticket) => ({
+        ...ticket,
+        flightId: fb.flightId,
+        brand: fb.contactName, // or use airline if available
+        bookedAt: "", // add if available in API
+        price: ticket.price,
+        bookingId: order.orderId,
+        paymentStatus: fb.status,
+        seatId: ticket.seatNumber,
+        seatClass: ticket.status,
+      }))
+    )
   );
+
+  const flightInMonth = Array(12).fill(0);
+  allTickets.forEach((ticket) => {
+    // If you have bookedAt, parse month here
+    // const monthIndex = ...;
+    // flightInMonth[monthIndex]++;
+  });
 
   const barData: chart = {
     tittle: "Number booking during the year",
@@ -84,17 +96,21 @@ function ProfilePage() {
       "Jul",
       "Aug",
       "Sep",
-      "Oc",
+      "Oct",
       "Nov",
       "Dec",
     ],
   };
-  const [brandData, setBrandData] = useState<
-    {
-      brand: string;
-      count: number;
-    }[]
-  >([]);
+
+  const brandCounts: { [key: string]: number } = {};
+  allTickets.forEach((ticket) => {
+    const brand = ticket.brand || "Unknown";
+    brandCounts[brand] = (brandCounts[brand] || 0) + 1;
+  });
+  const brandData = Object.keys(brandCounts).map((brand) => ({
+    brand,
+    count: brandCounts[brand],
+  }));
 
   const pieData: chart = {
     tittle: "Flights of each brand",
@@ -103,62 +119,23 @@ function ProfilePage() {
     datas: brandData.map((d) => d.count),
     labels: brandData.map((d) => d.brand),
   };
-
-  useEffect(() => {
-    const monthCounts = Array(12).fill(0);
-    const countryCounts: { [key: string]: number } = {};
-    const brandCounts: { [key: string]: number } = {};
-
-    bookings.forEach((book) => {
-      const createDay = book.bookedAt?.slice(3, 5);
-      if (createDay) {
-        const monthIndex = Number(createDay) - 1;
-        if (monthIndex >= 0 && monthIndex < 12) {
-          monthCounts[monthIndex]++;
-        }
-      }
-      ////
-      if (brandCounts[book.brand]) {
-        brandCounts[book.brand]++; // Fixing this line
-      } else {
-        brandCounts[book.brand] = 1; // Fixing this line
-      }
-      const brandDatas = Object.keys(brandCounts).map((brand) => ({
-        brand,
-        count: brandCounts[brand],
-      }));
-      console.log(brandDatas);
-
-      setBrandData(brandDatas);
-      setFlightInMonth(monthCounts);
-    });
-  }, [bookings]);
-
+console.log("orders[0]", orders[0]);
   return (
     <div className="container ">
       <div className="flex flex-row justify-between ">
         <ProfileCard />
         <div className="flex flex-col justify-between w-full ml-5">
-          <div className="  mb-5 flex justify-between h-full  items-center gap-5">
-            {/* <PieChart /> */}
+          <div className="mb-5 flex justify-between h-full items-center gap-5">
             <LineChart props={barData} />
-            {/* <BarChart data={barData} orientation={"vertical"} /> */}
             <BarChart data={pieData} orientation={"horizontal"} />
-            {/* <BarChart /> */}
           </div>
-
-          <div className="flex flex-col items-center  w-full bg-slate-50 p-5 rounded-2xl">
+          <div className="flex flex-col items-center w-full bg-slate-50 p-5 rounded-2xl">
             <div className="flex w-full justify-between">
               <div>
                 <div>
-                  <span className="text-lg font-normal ">
-                    Totals ticket booked:{" "}
-                  </span>
-                  <span className="text-xl font-semibold">
-                    {bookings.length}
-                  </span>
+                  <span className="text-lg font-normal ">Total orders: </span>
+                  <span className="text-xl font-semibold">{orders.length}</span>
                 </div>
-
                 <div>
                   <span className="text-lg font-normal ">Money spent: </span>
                   <span className="text-xl font-semibold">
@@ -167,21 +144,22 @@ function ProfilePage() {
                 </div>
               </div>
               <div>
-                <p className="text-lg font-semibold">Lastest Ticket</p>
-                {bookings[0] && (
+                <p className="text-lg font-semibold">Latest Order</p>
+                {orders[0] && orders[0].flightBookings[0] && (
                   <TicketCard
-                    bookingId={bookings[0]?.bookingId}
-                    flightId={bookings[0]?.flightId}
-                    bookedAt={bookings[0]?.bookedAt}
-                    seatId={bookings[0]?.seatId}
-                    paymentStatus={bookings[0]?.paymentStatus}
-                    seatClass={bookings[0]?.class}
-                    price={bookings[0]?.price}
+                    bookingId={orders[0].orderId}
+                    flightId={orders[0].flightBookings[0].flightId}
+                    bookedAt={""} // Add if available
+                    seatId={orders[0].flightBookings[0].tickets[0]?.seatNumber}
+                    paymentStatus={orders[0].flightBookings[0].status}
+                    seatClass={orders[0].flightBookings[0].tickets[0]?.status}
+                    price={orders[0].flightBookings[0].tickets[0]?.price}
                   />
                 )}
               </div>
             </div>
-            <TicketsPurchasedModal allBookings={bookings} />
+            {/* Pass allTickets or orders as needed */}
+            <TicketsPurchasedModal allBookings={allTickets} />
           </div>
         </div>
       </div>

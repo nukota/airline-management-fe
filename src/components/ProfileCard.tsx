@@ -34,12 +34,29 @@ const ProfileCard = () => {
     const fetchProfile = async () => {
       const url = `${process.env.NEXT_PUBLIC_SERVER}${customerEndpoint["get-me-by-token"]}`;
 
-      const { result, error } = await apiRequest<Customer>(
+      const { result, error } = await apiRequest<any>(
         url,
         "GET",
         session?.user.token
       );
-      if (result) setProfile(result);
+      if (result && result.data) {
+        // Map API fields to your local profile state
+        setProfile({
+          customerId: result.data.id?.toString() || "",
+          email: result.data.email || "",
+          phoneNumber: result.data.phoneNumber || "",
+          fullname: result.data.fullname || "",
+          birthday: result.data.birthday || "",
+          address: result.data.address || "",
+          nationality: result.data.nationality || "",
+          emailValidated: true,
+          cccd: result.data.idCardNumber || "",
+          cccdPicture: "", // If you have a separate field for CCCD picture, map it here
+          profilePicture: result.data.profilePicture || "",
+          createAt: "",
+          updateAt: "",
+        });
+      }
     };
     fetchProfile();
   }, [session]);

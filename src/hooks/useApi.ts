@@ -29,7 +29,7 @@ function useApi<T>(
         const response: AxiosResponse<T> = await axios.request({
           method,
           url,
-          headers: { Authorization: session?.user?.token },
+          headers: { Authorization: `Bearer ${session?.user.token}`},
           ...options,
         });
 

@@ -38,13 +38,13 @@ export default function SearchingPage() {
         setData(response.data);
         if (response.data && response.data.data) {
           const allFlightInfo = response.data.data.map((dt: FlightType) => {
-            const planeData = PlanesData.find(
-              (plane) => plane.brand === dt.airlines
-            );
-            const logo = planeData ? planeData.logo : "";
+            // const planeData = PlanesData.find(
+            //   (plane) => plane.brand === dt.airlines
+            // );
+            // const logo = planeData ? planeData.logo : "";
             return {
               ...dt,
-              logo: logo,
+              // logo: logo,
             };
           });
           setFilterFlight(allFlightInfo);

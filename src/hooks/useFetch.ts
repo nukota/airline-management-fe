@@ -20,7 +20,7 @@ function useFetch<T>(url: string): {
       maxBodyLength: Infinity,
       url: url,
       headers: {
-        Authorization: session?.user.token,
+        Authorization:  `Bearer ${session?.user.token}`,
       },
     };
     const fetchData = async () => {

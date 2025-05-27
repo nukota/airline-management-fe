@@ -24,7 +24,7 @@ export async function PUT(request: Request) {
       maxBodyLength: Infinity,
       url: url,
       headers: {
-        Authorization: session?.user.token,
+        Authorization: `Bearer ${session?.user.token}`,
         "Content-Type": "application/x-www-form-urlencoded",
       },
       data: qs.stringify(body),
