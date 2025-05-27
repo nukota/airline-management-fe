@@ -22,6 +22,10 @@ function StaffLoginForm() {
     formState: { errors, isSubmitting },
   } = useForm<FormFields>({
     resolver: zodResolver(schema),
+    defaultValues: {
+      username: "admin",
+      password: "password",
+    },
   });
 
   const onSubmit: SubmitHandler<FormFields> = async (data) => {
@@ -29,7 +33,7 @@ function StaffLoginForm() {
       email: data.username,
       password: data.password,
       redirect: false,
-      admin: true,
+      admin: "true",
     });
 
     if (!res?.error) {
@@ -44,7 +48,7 @@ function StaffLoginForm() {
         theme: "light",
       });
 
-      router.push("/");
+      router.push("/StaffHome");
       router.refresh();
     } else {
       console.log(res);

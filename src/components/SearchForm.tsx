@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { SubmitHandler, useForm } from "react-hook-form";
+import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import TextField from "@mui/material/TextField";
@@ -10,6 +10,7 @@ import { showErrorToast } from "@/utils/toastUtils";
 import { airportEndpoint } from "@/services/axios/endpoints/airport.endpoint";
 import { apiRequest } from "@/utils/apiRequest";
 import { countryData } from "@/data";
+import { useSession } from "next-auth/react";
 
 const schema = z.object({
   country: z.string().nonempty("Country is required"),
@@ -25,15 +26,25 @@ const SearchForm = () => {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<FormFields>({
     resolver: zodResolver(schema),
+    defaultValues: {
+      country: "Vietnam",
+      countryArrival: "Vietnam",
+      // ...other defaults if needed
+    },
   });
 
   const [departure, setDeparture] = useState<string | null>(null);
   const [destination, setDestination] = useState<string | null>(null);
-  const [cityOptions, setCityOptions] = useState<string[]>([]);
-  const [cityArrivalOptions, setCityArrivalOptions] = useState<string[]>([]);
+  const [cityOptions, setCityOptions] = useState<
+    { name: string; code: string }[]
+  >([]);
+  const [cityArrivalOptions, setCityArrivalOptions] = useState<
+    { name: string; code: string }[]
+  >([]);
 
   const [country, setCountry] = useState<string | null>(null);
   const [countryCode, setCountryCode] = useState<string>("VN");
@@ -64,58 +75,92 @@ const SearchForm = () => {
     setCountryOptions(countryData);
   }, []);
 
+  const { data: session } = useSession();
+
   useEffect(() => {
-  const get_all_city_by_code = async () => {
-    const url = `${process.env.NEXT_PUBLIC_SERVER}${airportEndpoint["post-search-airport"]}`;
-    const payload = {
-      filters: [
-        { key: "countryCode", operator: "equal", value: countryCode }
-      ],
-      sorts: [
-        { key: "id", type: "DESC" }
-      ],
-      rpp: 100,
-      page: 1
+    const get_all_city_by_code = async () => {
+      const url = `${process.env.NEXT_PUBLIC_SERVER}${airportEndpoint["post-search-airport"]}`;
+      const payload = {
+        filters: [
+          { key: "countryCode", operator: "equal", value: countryCode },
+        ],
+        sorts: [{ key: "id", type: "DESC" }],
+        rpp: 100,
+        page: 1,
+      };
+      const { result, error } = await apiRequest<any>(
+        url,
+        "POST",
+        undefined,
+        payload
+      );
+      if (error) showErrorToast(error);
+      if (result && result.data.items) {
+        const citiesMap = new Map<string, { name: string; code: string }>();
+        result.data.items.forEach((airport: any) => {
+          if (
+            airport.cityName &&
+            airport.code &&
+            !citiesMap.has(airport.cityName)
+          ) {
+            citiesMap.set(airport.cityName, {
+              name: airport.cityName,
+              code: airport.code,
+            });
+          }
+        });
+        setCityOptions(Array.from(citiesMap.values()));
+      }
     };
-    const { result, error } = await apiRequest<any>(url, "POST", undefined, payload);
-    if (error) showErrorToast(error);
-    if (result && result.data.items) {
-      const cities: string[] = Array.from(new Set(result.data.items.map((airport: any) => airport.cityName)));
-      console.log(cities);
-      setCityOptions(cities);
-    }
-  };
 
-  const get_all_arival_city_by_code = async () => {
-    const url = `${process.env.NEXT_PUBLIC_SERVER}${airportEndpoint["post-search-airport"]}`;
-    const payload = {
-      filters: [
-        { key: "countryCode", operator: "equal", value: countryArrivalCode }
-      ],
-      sorts: [
-        { key: "id", type: "DESC" }
-      ],
-      rpp: 100,
-      page: 1
+    const get_all_arival_city_by_code = async () => {
+      const url = `${process.env.NEXT_PUBLIC_SERVER}${airportEndpoint["post-search-airport"]}`;
+      const payload = {
+        filters: [
+          { key: "countryCode", operator: "equal", value: countryArrivalCode },
+        ],
+        sorts: [{ key: "id", type: "DESC" }],
+        rpp: 100,
+        page: 1,
+      };
+      const { result, error } = await apiRequest<any>(
+        url,
+        "POST",
+        undefined,
+        payload
+      );
+      if (error) showErrorToast(error);
+      if (result && result.data.items) {
+        const citiesMap = new Map<string, { name: string; code: string }>();
+        result.data.items.forEach((airport: any) => {
+          if (
+            airport.cityName &&
+            airport.code &&
+            !citiesMap.has(airport.cityName)
+          ) {
+            citiesMap.set(airport.cityName, {
+              name: airport.cityName,
+              code: airport.code,
+            });
+          }
+        });
+        setCityArrivalOptions(Array.from(citiesMap.values()));
+      }
     };
-    const { result, error } = await apiRequest<any>(url, "POST", undefined, payload);
-    if (error) showErrorToast(error);
-    if (result && result.data.items) {
-      const cities: string[] = Array.from(new Set(result.data.items.map((airport: any) => airport.cityName)));
-      console.log(cities);
-      setCityArrivalOptions(cities);
-    }
-  };
 
-  get_all_arival_city_by_code();
-  get_all_city_by_code();
-}, [countryCode, countryArrivalCode]);
+    get_all_arival_city_by_code();
+    get_all_city_by_code();
+  }, [countryCode, countryArrivalCode]);
 
   const onSubmit: SubmitHandler<FormFields> = async (data) => {
+    if (!session) {
+      showErrorToast("You must sign in to search!");
+      return;
+    }
     const queryParams = `?departure=${encodeURIComponent(
-      data.departure
+      departure || ""
     )}&destination=${encodeURIComponent(
-      data.destination
+      destination || ""
     )}&date=${encodeURIComponent(data.date)}`;
     window.location.href = `/SearchingPage${queryParams}`;
   };
@@ -130,29 +175,34 @@ const SearchForm = () => {
           >
             Country
           </label>
-          <Autocomplete
-            className="w-full"
-            onChange={(_, value) => {
-              setCountry(value);
-              const selectedCountryCode = countryOptions.find(
-                (option) => option.name === value
-              )?.code;
-              if (!!selectedCountryCode) setCountryCode(selectedCountryCode);
-            }}
-            disabled={isSubmitting}
-            options={countryOptions.map((option) => option.name)}
-            value={country || "Vietnam"}
-            defaultValue="Vietnam"
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                size="small"
-                {...register("country")}
-                placeholder="Vietnam"
+          <Controller
+            name="country"
+            control={control}
+            render={({ field }) => (
+              <Autocomplete
+                className="w-full"
+                options={countryOptions.map((option) => option.name)}
+                value={field.value || "Vietnam"}
+                onChange={(_, value) => {
+                  field.onChange(value);
+                  setCountry(value);
+                  const selectedCountryCode = countryOptions.find(
+                    (option) => option.name === value
+                  )?.code;
+                  if (!!selectedCountryCode)
+                    setCountryCode(selectedCountryCode);
+                }}
+                renderInput={(params) => (
+                  <TextField {...params} size="small" placeholder="Vietnam" />
+                )}
               />
             )}
           />
+          {errors.country && (
+            <div className="text-red-500">{errors.country.message}</div>
+          )}
         </div>
+
         <div className="flex-1 min-w-[200px]">
           <label
             className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
@@ -160,28 +210,35 @@ const SearchForm = () => {
           >
             Arrival Country
           </label>
-          <Autocomplete
-            className="w-full"
-            onChange={(_, value) => {
-              setCountryArrival(value);
-              const selectedCountryCode = countryOptions.find(
-                (option) => option.name === value
-              )?.code;
-              if (!!selectedCountryCode)
-                setCountryArrivalCode(selectedCountryCode);
-            }}
-            disabled={isSubmitting}
-            options={countryOptions.map((option) => option.name)}
-            value={countryArrival || "Vietnam"}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                size="small"
-                {...register("countryArrival")}
-                placeholder="Vietnam"
+          <Controller
+            name="countryArrival"
+            control={control}
+            render={({ field }) => (
+              <Autocomplete
+                className="w-full"
+                options={countryOptions.map((option) => option.name)}
+                value={field.value || "Vietnam"}
+                onChange={(_, value) => {
+                  field.onChange(value);
+                  setCountryArrival(value);
+                  const selectedCountryArrsetCountryArrivalCode =
+                    countryOptions.find(
+                      (option) => option.name === value
+                    )?.code;
+                  if (!!selectedCountryArrsetCountryArrivalCode)
+                    setCountryArrivalCode(
+                      selectedCountryArrsetCountryArrivalCode
+                    );
+                }}
+                renderInput={(params) => (
+                  <TextField {...params} size="small" placeholder="Vietnam" />
+                )}
               />
             )}
           />
+          {errors.countryArrival && (
+            <div className="text-red-500">{errors.countryArrival.message}</div>
+          )}
         </div>
       </div>
       <div className="flex justify-between items-center mb-10 gap-5">
@@ -194,10 +251,13 @@ const SearchForm = () => {
           </label>
           <Autocomplete
             className="w-full"
-            onChange={(_, value) => setDeparture(value)}
+            onChange={(_, value) => setDeparture(value ? value.code : null)}
             disabled={isSubmitting || !countryCode}
             options={cityOptions}
-            value={departure}
+            getOptionLabel={(option) => option.name}
+            value={
+              cityOptions.find((option) => option.code === departure) || null
+            }
             renderInput={(params) => (
               <TextField
                 {...params}
@@ -221,10 +281,15 @@ const SearchForm = () => {
           </label>
           <Autocomplete
             className="w-full"
-            onChange={(_, value) => setDestination(value)}
-            disabled={isSubmitting || !countryCode}
+            onChange={(_, value) => setDestination(value ? value.code : null)}
+            disabled={isSubmitting || !countryArrivalCode}
             options={cityArrivalOptions}
-            value={destination}
+            getOptionLabel={(option) => option.name}
+            value={
+              cityArrivalOptions.find(
+                (option) => option.code === destination
+              ) || null
+            }
             renderInput={(params) => (
               <TextField
                 {...params}
