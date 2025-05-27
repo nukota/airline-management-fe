@@ -19,23 +19,48 @@ const DetailPage = () => {
       )
       .join("&");
   };
-  const handlePaymentClick = () => {
-    const query = buildQuery({
-      flightId,
-      logo,
-      brand,
-      date,
-      time,
-      departure,
-      destination,
-      airportStart,
-      airportEnd,
-      duration,
-      chooseSeat: JSON.stringify(
-        chooseSeats.filter((seat) => seat.seat !== "")
-      ),
-    });
-    router.push(`/PayingPage?${query}`);
+
+  const handlePaymentClick = async () => {
+    // Prepare hold seats payload
+    const seatNumbers = chooseSeats
+      .filter((seat) => seat.seat !== "")
+      .map((seat) => seat.seat);
+    const holdPayload = {
+      seatNumbers,
+      flightId: Number(flightId),
+    };
+
+    try {
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_SERVER}/flight-service/booking/hold-seats`,
+        holdPayload,
+        {
+          headers: {
+            Authorization: `Bearer ${session?.user.token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      // If successful, proceed to PayingPage
+      const query = buildQuery({
+        flightId,
+        logo,
+        brand,
+        date,
+        time,
+        departure,
+        destination,
+        airportStart,
+        airportEnd,
+        duration,
+        chooseSeat: JSON.stringify(
+          chooseSeats.filter((seat) => seat.seat !== "")
+        ),
+      });
+      router.push(`/PayingPage?${query}`);
+    } catch (error) {
+      toast.error("Failed to hold seats. Please try again.");
+    }
   };
   const { data: session } = useSession();
 
@@ -136,9 +161,18 @@ const DetailPage = () => {
     }[]
   >([]);
 
+  // Helper to map API seat data to UI seat object
+  const mapApiSeatToUiSeat = (seat: any) => ({
+    seatId: seat.seatNumber, // Use seatNumber from API
+    class: seat.seatClass?.name || "", // Use seatClass.name from API
+    color: "blue",
+    priceBonusInterest: "0",
+    selected: seat.status === "BOOKED",
+  });
+
   useEffect(() => {
     const getSeatOfAirplane = async () => {
-      const url = `${process.env.NEXT_PUBLIC_SERVER}/seat-flight/seat-list?flightId=${flightId}`;
+      const url = `${process.env.NEXT_PUBLIC_SERVER}/flight-service/flight/${flightId}`;
 
       let config = {
         method: "get",
@@ -148,16 +182,10 @@ const DetailPage = () => {
       };
       try {
         const response = await axios.request(config);
-        const seatData = response.data.data;
+        const seatData = response.data.data.flightSeatmaps || [];
 
         setAlreadySelectedSeats((prevSeats) => {
-          const newSeats = seatData.map((seat: any) => ({
-            seatId: seat.seatId,
-            class: seat.class,
-            priceBonusInterest: seat.ticketClass.priceBonusInterest,
-            color: seat.ticketClass.color,
-            selected: !seat.isEmpty,
-          }));
+          const newSeats = seatData.map(mapApiSeatToUiSeat);
 
           const uniqueSeats = newSeats.filter((newSeat: any) => {
             return !prevSeats.some(

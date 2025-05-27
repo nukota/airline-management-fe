@@ -25,7 +25,7 @@ const CreateClassForm = () => {
       maxBodyLength: Infinity,
       url: `${process.env.NEXT_PUBLIC_SERVER}/ticket-class/create`,
       headers: {
-        Authorization: session?.user.token,
+        Authorization:  `Bearer ${session?.user.token}`,
       },
       data: data,
     };

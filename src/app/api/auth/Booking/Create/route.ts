@@ -18,9 +18,9 @@ export async function POST(request: Request) {
     let config = {
       method: "post",
       maxBodyLength: Infinity,
-      url: `${process.env.NEXT_PUBLIC_SERVER}/booking/create`,
+      url: `${process.env.NEXT_PUBLIC_SERVER}/flight-service/booking/book-seats`,
       headers: {
-        Authorization: session?.user.token,
+        Authorization: `Bearer ${session?.user.token}`,
         "Content-Type": "application/json",
       },
       data: qs.stringify(body),

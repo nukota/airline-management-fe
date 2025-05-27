@@ -6,13 +6,14 @@ import React, { useEffect, useState } from "react";
 
 interface TicketCardProps {
   bookingId: string;
-  flightId: string;
-  bookedAt: string;
-  paymentStatus: boolean;
+  flightId: number;
+  bookedAt?: string;
+  paymentStatus: string;
   seatId: string;
   seatClass: string;
-  price: string;
+  price: number;
 }
+
 import {
   Dropdown,
   DropdownTrigger,
@@ -24,6 +25,7 @@ import { toast } from "react-toastify";
 import { showErrorToast, showSuccessToast } from "@/utils/toastUtils";
 import { bookingEndpoint } from "@/services/axios/endpoints/booking.endpoint";
 import { apiRequest } from "@/utils/apiRequest";
+
 const TicketCard: React.FC<TicketCardProps> = ({
   bookingId,
   flightId,
@@ -36,27 +38,15 @@ const TicketCard: React.FC<TicketCardProps> = ({
   const { data: session } = useSession();
 
   const [flightInfo, setFlightInfo] = useState<{
-    departureTime: string;
-    airlines: string;
-    departureAirport: {
-      airportName: string;
-      city: string;
-    };
-    arrivalAirport: {
-      airportName: string;
-      city: string;
-    };
+    departureDate: string;
+    airline: { name: string };
+    departureAirport: { airportName: string; cityName: string };
+    arrivalAirport: { airportName: string; cityName: string };
   }>({
-    departureTime: "",
-    airlines: "",
-    departureAirport: {
-      airportName: "",
-      city: "",
-    },
-    arrivalAirport: {
-      airportName: "",
-      city: "",
-    },
+    departureDate: "",
+    airline: { name: "" },
+    departureAirport: { airportName: "", cityName: "" },
+    arrivalAirport: { airportName: "", cityName: "" },
   });
 
   useEffect(() => {
@@ -64,24 +54,24 @@ const TicketCard: React.FC<TicketCardProps> = ({
       let config = {
         method: "get",
         maxBodyLength: Infinity,
-        url: `${process.env.NEXT_PUBLIC_SERVER}/flight/${flightId}`,
+        url: `${process.env.NEXT_PUBLIC_SERVER}/flight-service/flight/${flightId}`,
         headers: {
-          Authorization: session?.user.token,
+          Authorization: `Bearer ${session?.user.token}`,
         },
       };
       try {
         const response = await axios.request(config);
-        const responseData = response.data;
+        const data = response.data.data;
         setFlightInfo({
-          departureTime: responseData.departureTime,
-          airlines: responseData.airlines,
+          departureDate: data.departureDate,
+          airline: { name: data.airline?.name || "" },
           departureAirport: {
-            airportName: responseData.departureAirport.airportName,
-            city: responseData.departureAirport.city,
+            airportName: data.departureAirport?.airportName || "",
+            cityName: data.departureAirport?.cityName || "",
           },
           arrivalAirport: {
-            airportName: responseData.arrivalAirport.airportName,
-            city: responseData.arrivalAirport.city,
+            airportName: data.arrivalAirport?.airportName || "",
+            cityName: data.arrivalAirport?.cityName || "",
           },
         });
       } catch (e) {
@@ -101,8 +91,9 @@ const TicketCard: React.FC<TicketCardProps> = ({
       session?.user.token
     );
     if (error) showErrorToast(error);
-    else showSuccessToast("Cancel succesful");
+    else showSuccessToast("Cancel successful");
   };
+
   return (
     <div className="bg-white shadow rounded-lg p-4 drop-shadow-md m-2 min-w-[500px] max-w-[700px]">
       <div className="flex justify-between items-center mb-4">
@@ -118,10 +109,10 @@ const TicketCard: React.FC<TicketCardProps> = ({
               ></div>
             </div>
             <span className="font-semibold ml-2 text-xl">
-              {flightInfo?.airlines},{" "}
+              {flightInfo.airline.name}
             </span>
           </div>
-          <span className="font-light text-sm">{flightInfo.departureTime}</span>
+          <span className="font-light text-sm">{flightInfo.departureDate}</span>
         </div>
         <div className="flex items-center gap-2 justify-center">
           <div className="font-semibold text-xl">{seatId}</div>
@@ -136,8 +127,8 @@ const TicketCard: React.FC<TicketCardProps> = ({
               {flightInfo.arrivalAirport.airportName}
             </div>
             <div className="text-sm text-gray-500">
-              {flightInfo.departureAirport.city} -{" "}
-              {flightInfo.arrivalAirport.city}
+              {flightInfo.departureAirport.cityName} -{" "}
+              {flightInfo.arrivalAirport.cityName}
             </div>
           </div>
 
@@ -146,7 +137,7 @@ const TicketCard: React.FC<TicketCardProps> = ({
               {price} VND
             </div>
             <div className="flex w-full justify-end">
-              {paymentStatus ? (
+              {paymentStatus === "PAID" ? (
                 <div className="text-sm  text-green-500">Paid</div>
               ) : (
                 <div className="text-sm  text-red-400">Unpaid</div>
@@ -155,7 +146,7 @@ const TicketCard: React.FC<TicketCardProps> = ({
           </div>
         </div>
         <div className="flex justify-between">
-          <div className="text-sm  text-gray-500">Bookat: {bookedAt}</div>
+          <div className="text-sm  text-gray-500">Booked at: {bookedAt || ""}</div>
           <Dropdown key={bookingId} className="flex justify-center">
             <DropdownTrigger>
               <Button variant="bordered">

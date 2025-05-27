@@ -80,7 +80,7 @@ const CreateFlightForm: React.FC<{ numberFlight: number }> = ({
       maxBodyLength: Infinity,
       url: `${process.env.NEXT_PUBLIC_SERVER}/flight/add-intermediate-airport`,
       headers: {
-        Authorization: session?.user.token,
+        Authorization:  `Bearer ${session?.user.token}`,
         "Content-Type": "application/json",
       },
       data: JSON.stringify(apiData),

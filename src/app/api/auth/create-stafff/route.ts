@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       maxBodyLength: Infinity,
       url: url,
       headers: {
-        Authorization: session?.user.token,
+        Authorization: `Bearer ${session?.user.token}`,
       },
       data: qs.stringify(body),
     };

@@ -46,7 +46,7 @@ function CreateTicketForm() {
         maxBodyLength: Infinity,
         url: url,
         headers: {
-          Authorization: session?.user.token,
+          Authorization:  `Bearer ${session?.user.token}`,
         },
       };
       try {

@@ -17,7 +17,7 @@ export async function apiRequest<T>(
     url,
     data,
     headers: {
-      Authorization: token ? ` ${token}` : undefined,
+      Authorization: token ? `Bearer ${token}` : undefined,
       "Content-Type": "application/json",
     },
     maxBodyLength: Infinity,

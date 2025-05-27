@@ -13,6 +13,7 @@ import { toast } from "react-toastify";
 import { airportEndpoint } from "@/services/axios/endpoints/airport.endpoint";
 import { apiRequest } from "@/utils/apiRequest";
 import { showErrorToast } from "@/utils/toastUtils";
+import { useSession } from "next-auth/react";
 
 const schema = z.object({
   country: z.string(),
@@ -21,30 +22,51 @@ const schema = z.object({
 type FormFields = z.infer<typeof schema>;
 
 const PayForm = () => {
+  const { data: session } = useSession();
   const route = useRouter();
-  const [selectedCountry, setSelectedCountry] = useState<string>("");
+  const searchParams = useSearchParams();
+  const orderId = searchParams.get("orderId");
+  const total = searchParams.get("total");
+
+  const handlePay = async () => {
+    if (!orderId) {
+      toast.error("No orderId found!");
+      return;
+    }
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_SERVER}/payment-service/payment/vnp-url/${orderId}`,
+        {
+          // headers: {
+          //   Authorization: `Bearer ${session?.user?.token}`,
+          // },
+        }
+      );
+      if (response.data && response.data.data.payUrl) {
+        // Redirect to payment gateway
+        window.location.href = response.data.data.payUrl;
+      } else {
+        toast.error("Failed to get payment URL!");
+      }
+    } catch (e) {
+      toast.error("Failed to get payment URL!");
+    }
+  };
 
   const [countryOptions, setCountryOptions] = useState<
     { name: string; code: string }[]
-  >([]);
-
-  useEffect(() => {
-    const getAllCountry = async () => {
-      const url = `${process.env.NEXT_PUBLIC_SERVER}${airportEndpoint["get-all-country"]}`;
-
-      const { result, error } = await apiRequest<
-        { name: string; code: string }[]
-      >(url, "GET");
-      if (error) showErrorToast(error);
-      if (result) setCountryOptions(result);
-    };
-    getAllCountry();
-  }, []);
-
-  const searchParams = useSearchParams();
-  const params = Object.fromEntries(searchParams.entries());
-  const total = params.total;
-
+  >([
+    { name: "Việt Nam", code: "VN" },
+    { name: "United States", code: "US" },
+    { name: "Japan", code: "JP" },
+    { name: "France", code: "FR" },
+    { name: "Germany", code: "DE" },
+    { name: "Singapore", code: "SG" },
+    { name: "Thailand", code: "TH" },
+    { name: "Australia", code: "AU" },
+    { name: "South Korea", code: "KR" },
+    { name: "United Kingdom", code: "GB" },
+  ]);
   const {
     register,
     formState: { errors, isSubmitting },
@@ -53,7 +75,7 @@ const PayForm = () => {
   });
 
   const discount = 0;
-
+  const [selectedCountry, setSelectedCountry] = useState<string>("");
   const [showModal, setShowModal] = useState<boolean>(false);
 
   return (
@@ -252,7 +274,7 @@ const PayForm = () => {
           <div className="flex justify-between">
             <p>Total:</p>
             <p className="text-xl font-semibold my-1">
-              ₫{parseInt(total) - discount}
+              ₫{parseInt(total!) - discount}
             </p>
           </div>
           <p className="text-sm font-light mt-4">
@@ -261,21 +283,7 @@ const PayForm = () => {
         </div>
         <div className="w-full">
           <button
-            onClick={() => {
-              toast.success("Purchase Succesful. Redirect to Profile", {
-                position: "top-right",
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "light",
-              });
-              setTimeout(() => {
-                route.push("/ProfilePage");
-              }, 6000);
-            }}
+            onClick={handlePay}
             className="w-full bg-purple-500 mx-auto block text-white rounded px-4 py-2 mb-4"
           >
             Complete Checkout

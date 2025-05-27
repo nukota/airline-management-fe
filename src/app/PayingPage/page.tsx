@@ -63,49 +63,63 @@ const PayingPage = () => {
     setFormData(newFormData);
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const apiForm = {
-      seatIdList: filteredParams.chooseSeat.map((Seat) => Seat.seat),
-      fullNameList: formData.map((form) => form.fullName),
-      phoneNumberList: formData.map((form) => form.phoneNumber),
-      emailList: formData.map((form) => form.email),
-      cccdList: formData.map((form) => form.cccd),
-      flightId: filteredParams.flightId,
-    };
-    console.log(apiForm);
-    handleBooking(apiForm);
-    router.push(`/iPayPage?total=${totalMoney.toString()}`);
-  };
 
-  const handleBooking = async (data: any) => {
-    let config = {
-      method: "post",
-      maxBodyLength: Infinity,
-      url: `${process.env.NEXT_PUBLIC_SERVER}/booking/create`,
-      headers: {
-        Authorization: session?.user.token,
-        "Content-Type": "application/json",
-      },
-      data: JSON.stringify(data),
+    const bookingPerson = {
+      contactName: formData[0]?.fullName || "",
+      contactPhone: formData[0]?.phoneNumber || "",
+      contactEmail: formData[0]?.email || "",
     };
+
+    const passengers = formData.map((form, idx) => ({
+      passengerName: form.fullName,
+      passengerBirthdate: "2004-12-30",
+      passengerGender: "MALE",
+      passengerIdCard: form.cccd,
+      seatNumber: filteredParams.chooseSeat[idx]?.seat,
+    }));
+
+    const bookingData = {
+      flightId: filteredParams.flightId,
+      bookingPerson,
+      passengers,
+    };
+
+    if (!session?.user?.token) {
+      toast.error("You must be signed in to complete the booking.");
+      return;
+    }
+
     try {
-      const response = await axios.request(config);
-      console.log(response);
-      toast.success("Booking succesful", {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-      });
-    } catch (e: any) {
-      console.log(e);
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_SERVER}/flight-service/booking/book-seats`,
+        bookingData,
+        {
+          headers: {
+            Authorization: `Bearer ${session.user.token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (
+        response.data &&
+        response.data.status === "200" &&
+        response.data.data?.orderId
+      ) {
+        router.push(
+          `/iPayPage?orderId=${
+            response.data.data.orderId
+          }&total=${totalMoney.toString()}`
+        );
+      } else {
+        toast.error("Booking failed!");
+      }
+    } catch (e) {
+      toast.error("Booking failed!");
     }
   };
+
   return (
     <div>
       <form onSubmit={handleSubmit}>
@@ -235,9 +249,7 @@ const PayingPage = () => {
             </button>
 
             <button
-              // onClick={handleBooking}
-              //type="submit"
-
+              type="submit"
               className="btn btn-active bg-orange-400 text-white min-w-[200px] hover:text-black "
             >
               Pay
