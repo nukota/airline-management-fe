@@ -54,71 +54,28 @@ export const options: NextAuthOptions = {
       credentials: {
         email: {},
         password: {},
+        admin: {},
       },
       async authorize(credentials, req) {
-        const isStaff = req.body?.admin;
-        console.log(typeof isStaff);
-        if (isStaff === "false") {
-          try {
-            const url = `${process.env.NEXT_PUBLIC_SERVER}/user-service/customer/login`;
-            const config = {
-              method: "post",
-              maxBodyLength: Infinity,
-              url: url,
-              headers: {},
-              data: qs.stringify({
-                email: credentials?.email,
-                password: credentials?.password,
-              }),
-            };
-            const response = await axios.request(config);
+        const isAdmin = credentials?.admin === "true";
+        const url = isAdmin
+          ? `${process.env.NEXT_PUBLIC_SERVER}/user-service/employee/login`
+          : `${process.env.NEXT_PUBLIC_SERVER}/user-service/customer/login`;
 
-            if (response.status === 200) {
-              const user = response.data.customer;
-              return {
-                name: user.fullname,
-                email: user.email,
-                role: null,
-                id: user.customerId,
-                token: response.data.token,
-              };
-            }
-            return null;
-          } catch (error: any) {
-            if (error) throw new Error(error.response.data.message);
-            return null;
-          }
-        } else if (isStaff === "true") {
-          try {
-            const url = `${process.env.NEXT_PUBLIC_SERVER}/user-service/employee/login`;
-            const config = {
-              method: "post",
-              maxBodyLength: Infinity,
-              url: url,
-              headers: {},
-              data: qs.stringify({
-                username: credentials?.email,
-                password: credentials?.password,
-              }),
-            };
-            const response = await axios.request(config);
-            if (response.status === 200) {
-              const user = response.data.staff;
-              return {
-                name: user.username,
-                email: user.email,
-                role: user.role,
-                id: user.staffId,
-                token: response.data.token,
-              };
-            }
-            return null;
-          } catch (error: any) {
-            //console.log("Test :", error.response.data);
-            if (error) throw new Error(error.response.data.message);
-            return null;
-          }
-        } else return null;
+        const payload = isAdmin
+          ? { username: credentials?.email, password: credentials?.password }
+          : { email: credentials?.email, password: credentials?.password };
+
+        const response = await axios.post(url, payload, {
+          headers: { "Content-Type": "application/json" },
+        });
+        if (response.data?.status === "200" && response.data?.data?.token) {
+          return {
+            ...response.data.data, // or map to your user object
+            token: response.data.data.token,
+          };
+        }
+        return null;
       },
     }),
   ],

@@ -7,6 +7,6 @@ export const airportEndpoint = {
   "put-update-airport-info": (id: string) => `/airport/${id}`,
   "del-delete-airport": (id: string) => `/airport/${id}`,
   "get-all-airport": "/airport",
-  "get-find-airport-by-id": (id: string) => `/airport/${id}`,
+  "get-find-airport-by-id": (id: string) => `/flight-service/flight/${id}`,
   "post-upload-picture": "/airport/upload-picture",
 };

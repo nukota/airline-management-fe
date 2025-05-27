@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { GoogleSignInButton } from "./GoogleSignInButton";
 import { toast } from "react-toastify";
 import { showErrorToast, showSuccessToast } from "@/utils/toastUtils";
+import axios from "axios";
 
 const schema = z.object({
   email: z.string().email(),
@@ -28,8 +29,8 @@ const SignInForm: React.FC<prop> = ({ isModal = false }) => {
     formState: { errors, isSubmitting },
   } = useForm<FormFields>({
     defaultValues: {
-      email: "ducnguyenkudo@gmail.com",
-      password: "@Duc201103",
+      email: "haphuthinh332004@gmail.com",
+      password: "password",
     },
     resolver: zodResolver(schema),
   });
@@ -39,19 +40,13 @@ const SignInForm: React.FC<prop> = ({ isModal = false }) => {
       email: data.email,
       password: data.password,
       redirect: false,
-      admin: false,
     });
-
     if (!res?.error) {
-      showSuccessToast("Sign in succesfully");
-
+      showSuccessToast("Sign in successfully");
       if (!isModal) router.push("/");
-      else {
-        router.refresh();
-      }
+      else router.refresh();
     } else {
-      console.log(res);
-      showErrorToast(res.error);
+      showErrorToast("Sign in failed");
     }
   };
 

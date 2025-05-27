@@ -40,6 +40,7 @@ const ListSearchingView: React.FC<{ allFlight: FlightType[] }> = ({
   );
 
   const getAirportByID = async (id: any) => {
+    console.log("flightId", id);
     let config = {
       method: "get",
       maxBodyLength: Infinity,
@@ -62,7 +63,12 @@ const ListSearchingView: React.FC<{ allFlight: FlightType[] }> = ({
   };
 
   const handleViewIntermediate = useCallback(async () => {
+    console.log("flightIntermediate", flightIntermediate);
     if (flightIntermediate?.intermediateAirports) {
+      console.log(
+        "flightIntermediate.intermediateAirports",
+        flightIntermediate.intermediateAirports
+      );
       const data = await Promise.all(
         flightIntermediate.intermediateAirports.map((flight) =>
           getAirportByID(flight.airportId)
@@ -80,6 +86,13 @@ const ListSearchingView: React.FC<{ allFlight: FlightType[] }> = ({
     };
     handle();
   }, [intermediateModalId, handleViewIntermediate]);
+
+  useEffect(() => {
+    console.log("allFlight", allFlight);
+    if (allFlight.length > 0 && !intermediateModalId) {
+      setIntermediateModalId(allFlight[0].flightId);
+    }
+  }, [allFlight, intermediateModalId]);
 
   const handleChooseFlight = async (flight: any) => {
     const url = `${process.env.NEXT_PUBLIC_SERVER}${bookingEndpoint[
