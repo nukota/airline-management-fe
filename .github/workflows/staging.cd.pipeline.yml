@@ -1,7 +1,7 @@
 name: "[CD] BTH SE356 frontend"
 
 env:
-  IMAGE_NAME: haphuthinh/se356-frontend:${{ github.ref_name }}-${{ github.sha }}
+  IMAGE_NAME: thinhuit/se356-frontend:${{ github.ref_name }}-${{ github.sha }}
   CONTAINER_NAME: se356-frontend
 
 on:
