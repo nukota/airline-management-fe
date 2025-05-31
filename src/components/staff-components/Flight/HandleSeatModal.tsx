@@ -26,7 +26,7 @@ interface TicketClass {
 const HandleSeatModal = () => {
   const { data: session } = useSession();
 
-  const flight = useFlightRow();
+  const flight: any = useFlightRow();
   const seats = useSeatFlight();
 
   const [chooseSeats, setChooseSeats] = useState<ChosenSeat[]>([]);

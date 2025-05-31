@@ -26,7 +26,7 @@ const FlightReport = () => {
     const countryCounts: { [key: string]: number } = {};
     const brandCounts: { [key: string]: number } = {};
 
-    data.forEach((flight) => {
+    data.forEach((flight: any) => {
       /////////////////////
       const createDay = flight.createAt?.slice(3, 5);
       if (createDay) {

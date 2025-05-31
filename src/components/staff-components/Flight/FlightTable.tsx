@@ -32,7 +32,7 @@ const FlightTable = () => {
               </tr>
             </thead>
             <tbody>
-              {flights.map((cardData, index) => {
+              {flights.map((cardData: any, index) => {
                 if (
                   index >= MAX_LENGTH_COL * (page - 1) &&
                   index < MAX_LENGTH_COL * page
