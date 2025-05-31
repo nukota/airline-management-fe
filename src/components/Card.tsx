@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import useFetch from "@/hooks/useFetch";
 import { showErrorToast } from "@/utils/toastUtils";
 
-const Card: React.FC<{ flight: FlightType }> = ({ flight }) => {
+const Card: React.FC<{ flight: any }> = ({ flight }) => {
   const url = `${process.env.NEXT_PUBLIC_SERVER}/booking/check-booking?flightId=${flight.flightId}`;
   const { data, loading, error } = useFetch<any>(url);
 

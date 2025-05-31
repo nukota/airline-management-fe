@@ -97,9 +97,9 @@ const flightReducer = (
     case "create_new_flights":
       return [...state];
     case "deleted_flights":
-      return state.filter((flight) => flight.flightId !== action.flightId);
+      return state.filter((flight: any) => flight.flightId !== action.flightId);
     case "filter_flights": {
-      return action.origin.filter((flight) => {
+      return action.origin.filter((flight: any) => {
         return (
           flight.flightId
             .toLowerCase()
