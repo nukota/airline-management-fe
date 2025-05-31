@@ -14,7 +14,7 @@ import StatusModal from "./StatusModal";
 import SeatModal from "./SeatModal";
 import { useDeleteFlight } from "@/hooks/flight-hooks/useDeleteFlight";
 
-const FlightRow: React.FC<{ flight: FlightType; index: number }> = ({
+const FlightRow: React.FC<{ flight: any; index: number }> = ({
   flight,
   index,
 }) => {
