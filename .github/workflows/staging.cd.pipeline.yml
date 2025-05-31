@@ -46,9 +46,9 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           port: 22
           script: |
-            echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | sudo docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+            echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
 
-            sudo docker pull ${{ env.IMAGE_NAME }}
+            docker pull ${{ env.IMAGE_NAME }}
 
             CONTAINER_NAME="${{ env.CONTAINER_NAME }}"
 
