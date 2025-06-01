@@ -68,6 +68,8 @@ jobs:
               --health-retries=3 \
               --health-timeout=20s \
               --memory-reservation="300m" \
+              -e NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}" \ 
+              -e NEXT_PUBLIC_SERVER="${{ secrets.NEXT_PUBLIC_SERVER }}" \ 
               ${{ env.IMAGE_NAME }}
 
             echo "Deployment complete! New version running on port 8273."

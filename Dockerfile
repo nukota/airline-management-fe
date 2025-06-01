@@ -25,7 +25,6 @@ ENV NODE_ENV=production
 ENV NEXT_PUBLIC_SERVER=${NEXT_PUBLIC_SERVER}
 ENV NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
 
-
 # Build ứng dụng Next.js
 RUN npm run build
 
