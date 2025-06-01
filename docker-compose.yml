@@ -5,6 +5,8 @@ services:
     ports:
       - "8273:80"
     container_name: se356-fe
+    env_file:
+      - .env
     deploy:
       resources:
         limits:
