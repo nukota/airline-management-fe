@@ -1,8 +1,7 @@
-name: "[CD] BTH SE356 frontend"
+name: SE356 Frontend CI/CD Pipeline
 
 env:
-  IMAGE_NAME: thinhuit/se356-frontend:${{ github.ref_name }}-${{ github.sha }}
-  CONTAINER_NAME: se356-frontend
+  ENV_FILE_PATH: /root/se356/frontend/env_file/.env
 
 on:
   push:
@@ -10,64 +9,31 @@ on:
       - release
 
 jobs:
-  build_and_publish:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Log in to Docker Hub
-        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
-
-      - name: Build Docker image
-        run: |
-          docker build \
-          --build-arg NEXT_PUBLIC_SERVER=${{ secrets.NEXT_PUBLIC_SERVER }} \
-          --build-arg NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }} \
-          -t $IMAGE_NAME .
-
-      - name: Push Docker image to Docker Hub
-        run: docker push $IMAGE_NAME
-
   deploy:
     runs-on: ubuntu-latest
-    needs: build_and_publish
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Deploy to server with zero downtime
-        uses: appleboy/ssh-action@v1.1.0
+      - name: Copy source code to server
+        uses: appleboy/scp-action@v0.1.1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          source: "./*"
+          target: "/root/se356/frontend/source"
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v0.1.4
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
           port: 22
           script: |
-            echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
-
-            docker pull ${{ env.IMAGE_NAME }}
-
-            CONTAINER_NAME="${{ env.CONTAINER_NAME }}"
-
-            if [ "$(docker ps -aq -f name=^${CONTAINER_NAME}$)" ]; then
-                docker stop $CONTAINER_NAME
-                docker rm $CONTAINER_NAME
-            fi
-
-            docker run -d \
-              --name ${{ env.CONTAINER_NAME }} \
-              --cpus="0.5" \
-              --memory="600m" \
-              -p 8273:80 \
-              --restart unless-stopped \
-              --health-cmd="curl -f http://localhost:80/ || exit 1" \
-              --health-interval=60s \
-              --health-retries=3 \
-              --health-timeout=20s \
-              --memory-reservation="300m" \
-              ${{ env.IMAGE_NAME }}
-
-            echo "Deployment complete! New version running on port 8273."
+            cp ${{ env.ENV_FILE_PATH }} /root/se356/frontend/source/
+            cd /root/se356/frontend/source/  
+            sudo docker compose down       
+            docker compose up --build -d
