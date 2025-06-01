@@ -18,12 +18,7 @@ RUN npm install
 # Sao chép toàn bộ code vào container
 COPY . .
 
-ARG NEXT_PUBLIC_SERVER
-ARG NEXTAUTH_SECRET
-
 ENV NODE_ENV=production
-ENV NEXT_PUBLIC_SERVER=${NEXT_PUBLIC_SERVER}
-ENV NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
 
 # Build ứng dụng Next.js
 RUN npm run build
