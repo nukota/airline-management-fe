@@ -1,0 +1,12 @@
+version: "3"
+services:
+  se356-fe:
+    build: .
+    ports:
+      - "8273:80"
+    container_name: se356-fe
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 500M
