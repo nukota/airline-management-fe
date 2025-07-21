@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Airline Management Frontend – SE104 Project
 
-## Getting Started
+![image](./picture/Screenshot_20240716_124059.png)
 
-First, run the development server:
+> The rapid growth of the airline tourism industry has significantly increased the need for efficient airline flight management and seamless interaction between airlines and customers.  
+> Traditional methods that rely heavily on paperwork and manual processes for managing flights and selling tickets consume substantial human resources and are prone to errors.  
+> 
+> This project proposes a web-based airline ticket management system that enables both customers and airport staff to view flight information, book, and purchase tickets in a modern, intuitive, and efficient manner—anytime, anywhere, with an internet-connected device.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Features
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### ✈️ Flight Management
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+![image](./picture/Screenshot_20240716_125405.png)
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+- Manage and update flight details, including schedule, destination, airport, aircraft type, and available seats.
 
-## Learn More
+### 🛫 Airport Management
 
-To learn more about Next.js, take a look at the following resources:
+![image](./picture/Screenshot_20240716_125241.png)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Add and edit airport information such as name and status.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+### ⚙️ Regulations Management
 
-## Deploy on Vercel
+![image](./picture/Screenshot_20240716_125536.png)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Authorized staff can modify regulations on booking, pricing, flight duration, stopover time, seat classes, etc.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+### 🎫 Ticket Management
+
+![image](./picture/Screenshot_20240716_125838.png)
+
+- Staff can enter customer data, look up flights, and issue printed tickets.
+
+### 🧾 Booking, Reservation, and Payment
+
+![image](./picture/Screenshot_20240716_124212.png)  
+![image](./picture/Screenshot_20240716_124248.png)
+
+- Customers can book tickets online using a secure and user-friendly interface.
+- Supports multiple payment methods with secure transaction processing.
+
+### 👤 Passenger Information Management
+
+![image](./picture/Screenshot_20240716_135959.png)
+
+- Store and manage passenger information such as name, phone number, email, and other personal data.
+
+---
+
+## 🗂️ About This Repository
+
+This is the frontend source code of the project, built with the following technologies:
+
+- **Web Framework**: [Next.js](https://nextjs.org/) (based on ReactJS)
+- **API Communication**: RESTful API
+- **Backend Repository (Express.js)**: [airlane-management.backend](https://github.com/chabuuuu/airlane-management.backend)
+
+---
+
+## 🚀 Live Demo
+
+- Guest Demo: 
+- Staff Demo: 
+
+---
